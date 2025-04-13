@@ -6,6 +6,11 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('views'));
 
+app.get('/', (req, res) => {
+    res.send("🔥 Checkout PayPal do Lek tá no ar, filho da puta!");
+  });
+  
+
 app.get('/checkout', (req, res) => {
   res.sendFile(__dirname + '/views/checkout.html');
 });
