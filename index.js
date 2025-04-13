@@ -16,14 +16,14 @@ app.post('/checkout', (req, res) => {
 
   const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick` +
   `&business=${process.env.PAYPAL_EMAIL}` +
-  `&item_name=Zapatillas Adidas Boost` +
+  `&item_name=Sneaker Snk House` +
   `&amount=${encodeURIComponent(amount)}` +
   `&currency_code=EUR` +
   `&return=${encodeURIComponent(process.env.RETURN_URL)}` +
   `&cancel_return=${encodeURIComponent(process.env.CANCEL_URL)}` +
   `&landing_page=Billing` +
   `&useraction=commit` +
-  `&email=javiertorres.teste@gmail.com` +
+  `&email=ex@gmail.com` +
   `&no_note=1` +
   `&locale.x=es_ES` +
   `&lc=ES` +
