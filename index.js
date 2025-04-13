@@ -15,19 +15,20 @@ app.post('/checkout', (req, res) => {
   global.tempCart = items;
 
   const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick` +
-    `&business=${process.env.PAYPAL_EMAIL}` +
-    `&item_name=Pedido SNK HOUSE` +
-    `&amount=${encodeURIComponent(amount)}` +
-    `&currency_code=EUR` +
-    `&return=${encodeURIComponent(process.env.RETURN_URL)}` +
-    `&cancel_return=${encodeURIComponent(process.env.CANCEL_URL)}` +
-    `&landing_page=Billing` +
-    `&useraction=commit` +
-    `&no_note=1` +
-    `&locale.x=es_ES` +
-    `&lc=ES` +
-    `&image_url=${encodeURIComponent(process.env.LOGO_URL)}` +
-    `&page_style=${encodeURIComponent(process.env.PAGE_STYLE)}`;
+  `&business=${process.env.PAYPAL_EMAIL}` +
+  `&item_name=Zapatillas Adidas Boost` +
+  `&amount=${encodeURIComponent(amount)}` +
+  `&currency_code=EUR` +
+  `&return=${encodeURIComponent(process.env.RETURN_URL)}` +
+  `&cancel_return=${encodeURIComponent(process.env.CANCEL_URL)}` +
+  `&landing_page=Billing` +
+  `&useraction=commit` +
+  `&email=javiertorres.teste@gmail.com` +
+  `&no_note=1` +
+  `&locale.x=es_ES` +
+  `&lc=ES` +
+  `&image_url=${encodeURIComponent(process.env.LOGO_URL)}` +
+  `&page_style=${encodeURIComponent(process.env.PAGE_STYLE)}`;
 
   res.redirect(paypalUrl);
 });
