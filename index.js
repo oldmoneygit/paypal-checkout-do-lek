@@ -15,20 +15,20 @@ app.post('/checkout', (req, res) => {
   global.tempCart = items;
 
   const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick` +
-  `&business=${process.env.PAYPAL_EMAIL}` +
-  `&item_name=Sneaker Snk House` +
-  `&amount=${encodeURIComponent(amount)}` +
-  `&currency_code=EUR` +
-  `&return=${encodeURIComponent(process.env.RETURN_URL)}` +
-  `&cancel_return=${encodeURIComponent(process.env.CANCEL_URL)}` +
-  `&landing_page=Billing` +
-  `&useraction=commit` +
-  `&email=` +
-  `&no_note=1` +
-  `&locale.x=es_ES` +
-  `&lc=ES` +
-  `&image_url=${encodeURIComponent(process.env.LOGO_URL)}` +
-  `&page_style=${encodeURIComponent(process.env.PAGE_STYLE)}`;
+    `&business=${process.env.PAYPAL_EMAIL}` +
+    `&item_name=Sneaker Snk House` +
+    `&amount=${encodeURIComponent(amount)}` +
+    `&currency_code=EUR` +
+    `&return=${encodeURIComponent(process.env.RETURN_URL)}` +
+    `&cancel_return=${encodeURIComponent(process.env.CANCEL_URL)}` +
+    `&landing_page=Billing` +
+    `&useraction=commit` +
+    `&email=` +
+    `&no_note=1` +
+    `&locale.x=es_ES` +
+    `&lc=ES` +
+    `&image_url=${encodeURIComponent(process.env.LOGO_URL)}` +
+    `&page_style=${encodeURIComponent(process.env.PAGE_STYLE)}`;
 
   res.redirect(paypalUrl);
 });
@@ -60,10 +60,20 @@ app.post('/ipn', express.urlencoded({ extended: false }), async (req, res) => {
           line_items,
           financial_status: "paid",
           currency: payload.mc_currency,
+          email: payload.payer_email || "sem-email@cliente.com",
           customer: {
             first_name: payload.first_name || "Cliente",
+            last_name: payload.last_name || "PayPal"
+          },
+          shipping_address: {
+            first_name: payload.first_name || "Cliente",
             last_name: payload.last_name || "PayPal",
-            email: payload.payer_email || "email@fake.com"
+            address1: payload.address_street || "Endereço não informado",
+            city: payload.address_city || "Cidade não informada",
+            zip: payload.address_zip || "00000",
+            country: payload.address_country || "Espanha",
+            country_code: payload.address_country_code || "ES",
+            phone: payload.contact_phone || "+34 600 000 000"
           },
           note: `Pedido via PayPal IPN - TXN: ${payload.txn_id}`
         }
