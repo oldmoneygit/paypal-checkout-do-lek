@@ -7,8 +7,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('views'));
 
 app.get('/', (req, res) => {
-    res.send("🔥 Checkout PayPal do Lek tá no ar, filho da puta!");
-  });
+  res.redirect('/checkout');
+});
+
   
 
 app.get('/checkout', (req, res) => {
