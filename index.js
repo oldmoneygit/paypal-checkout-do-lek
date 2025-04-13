@@ -30,10 +30,12 @@ app.post('/checkout', (req, res) => {
     `&useraction=commit` +
     `&no_note=1` +
     `&locale.x=es_ES` +
+    `&lc=ES` + // Força localização pra Espanha
     `&image_url=${encodeURIComponent(process.env.LOGO_URL)}` +
     `&page_style=${encodeURIComponent(process.env.PAGE_STYLE)}`;
 
   res.redirect(paypalUrl);
 });
+
 
 module.exports = app;
