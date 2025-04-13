@@ -14,13 +14,18 @@ app.post('/checkout', (req, res) => {
   // Armazena temporariamente o carrinho no global
   global.tempCart = items;
 
+  // Define domínio da loja de origem dinamicamente
+  const origin = req.headers.origin || 'https://602j2f-ig.myshopify.com';
+  const returnUrl = `${origin}/pages/sucesso`;
+  const cancelUrl = `${origin}/pages/cancelado`;
+
   const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick` +
     `&business=${process.env.PAYPAL_EMAIL}` +
     `&item_name=Sneaker Snk House` +
     `&amount=${encodeURIComponent(amount)}` +
     `&currency_code=EUR` +
-    `&return=${encodeURIComponent(process.env.RETURN_URL)}` +
-    `&cancel_return=${encodeURIComponent(process.env.CANCEL_URL)}` +
+    `&return=${encodeURIComponent(returnUrl)}` +
+    `&cancel_return=${encodeURIComponent(cancelUrl)}` +
     `&landing_page=Billing` +
     `&useraction=commit` +
     `&email=` +
@@ -31,6 +36,8 @@ app.post('/checkout', (req, res) => {
     `&page_style=${encodeURIComponent(process.env.PAGE_STYLE)}`;
 
   res.redirect(paypalUrl);
+ 
+
 });
 
 // IPN DO PAYPAL - valida e cria pedido real na Shopify
