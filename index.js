@@ -57,4 +57,8 @@ app.post('/ipn', express.urlencoded({ extended: false }), async (req, res) => {
     console.error('❌ ERRO IPN:', error.response?.data || error.message);
     res.sendStatus(500);
   }
+  
 });
+module.exports = app;
+
+
