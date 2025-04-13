@@ -1,41 +1,59 @@
-require('dotenv').config();
-const express = require('express');
-const bodyParser = require('body-parser');
-const app = express();
+const axios = require('axios'); // se ainda não instalou: npm install axios
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('views'));
+app.post('/ipn', express.urlencoded({ extended: false }), async (req, res) => {
+  const payload = req.body;
 
-app.get('/', (req, res) => {
-  res.redirect('/checkout');
+  // Monta verificação com o PayPal
+  const verifyUrl = 'https://ipnpb.paypal.com/cgi-bin/webscr';
+  const verifyPayload = new URLSearchParams({ cmd: '_notify-validate', ...payload });
+
+  try {
+    const response = await axios.post(verifyUrl, verifyPayload.toString(), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
+
+    if (response.data === 'VERIFIED' && payload.payment_status === 'Completed') {
+      console.log('✅ IPN VERIFICADO');
+
+      // Cria pedido na Shopify
+      const shopifyOrder = {
+        order: {
+          line_items: [
+            {
+              title: payload.item_name,
+              price: payload.mc_gross,
+              quantity: 1,
+              name: payload.item_name,
+            },
+          ],
+          financial_status: "paid",
+          currency: payload.mc_currency,
+          customer: {
+            first_name: payload.first_name || "Cliente",
+            last_name: payload.last_name || "PayPal",
+            email: payload.payer_email || "email@fake.com"
+          },
+          note: `Pedido processado via PayPal IPN - Transaction ID: ${payload.txn_id}`
+        }
+      };
+
+      const shopifyUrl = `https://${process.env.SHOPIFY_DOMAIN}/admin/api/2023-10/orders.json`;
+
+      const shopifyRes = await axios.post(shopifyUrl, shopifyOrder, {
+        headers: {
+          'X-Shopify-Access-Token': process.env.SHOPIFY_ACCESS_TOKEN,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('✅ Pedido criado na Shopify:', shopifyRes.data.order.id);
+    } else {
+      console.log('❌ IPN INVÁLIDO OU PENDENTE');
+    }
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('Erro IPN:', error.response?.data || error.message);
+    res.sendStatus(500);
+  }
 });
-
-  
-
-app.get('/checkout', (req, res) => {
-  res.sendFile(__dirname + '/views/checkout.html');
-});
-
-app.post('/checkout', (req, res) => {
-  const { item_name, amount } = req.body;
-
-  const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick` +
-    `&business=${process.env.PAYPAL_EMAIL}` +
-    `&item_name=${encodeURIComponent(item_name)}` +
-    `&amount=${encodeURIComponent(amount)}` +
-    `&currency_code=EUR` +
-    `&return=${encodeURIComponent(process.env.RETURN_URL)}` +
-    `&cancel_return=${encodeURIComponent(process.env.CANCEL_URL)}` +
-    `&landing_page=Billing` +
-    `&useraction=commit` +
-    `&no_note=1` +
-    `&locale.x=es_ES` +
-    `&lc=ES` + // Força localização pra Espanha
-    `&image_url=${encodeURIComponent(process.env.LOGO_URL)}` +
-    `&page_style=${encodeURIComponent(process.env.PAGE_STYLE)}`;
-
-  res.redirect(paypalUrl);
-});
-
-
-module.exports = app;
