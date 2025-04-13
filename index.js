@@ -1,8 +1,38 @@
-const axios = require('axios');
 const express = require('express');
+const axios = require('axios');
 const app = express();
+require('dotenv').config();
 
-// IPN DO PAYPAL + CRIA PEDIDO NA SHOPIFY COM MÚLTIPLOS PRODUTOS
+// Middleware necessário pra processar POST vindo de forms
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+// Checkout - redireciona pro PayPal
+app.post('/checkout', (req, res) => {
+  const { amount, items } = req.body;
+
+  // Armazena temporariamente o carrinho no global
+  global.tempCart = items;
+
+  const paypalUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick` +
+    `&business=${process.env.PAYPAL_EMAIL}` +
+    `&item_name=Pedido SNK HOUSE` +
+    `&amount=${encodeURIComponent(amount)}` +
+    `&currency_code=EUR` +
+    `&return=${encodeURIComponent(process.env.RETURN_URL)}` +
+    `&cancel_return=${encodeURIComponent(process.env.CANCEL_URL)}` +
+    `&landing_page=Billing` +
+    `&useraction=commit` +
+    `&no_note=1` +
+    `&locale.x=es_ES` +
+    `&lc=ES` +
+    `&image_url=${encodeURIComponent(process.env.LOGO_URL)}` +
+    `&page_style=${encodeURIComponent(process.env.PAGE_STYLE)}`;
+
+  res.redirect(paypalUrl);
+});
+
+// IPN DO PAYPAL - valida e cria pedido real na Shopify
 app.post('/ipn', express.urlencoded({ extended: false }), async (req, res) => {
   const payload = req.body;
 
@@ -57,8 +87,7 @@ app.post('/ipn', express.urlencoded({ extended: false }), async (req, res) => {
     console.error('❌ ERRO IPN:', error.response?.data || error.message);
     res.sendStatus(500);
   }
-  
 });
+
+// Exporta o app pro Vercel
 module.exports = app;
-
-
