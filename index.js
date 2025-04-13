@@ -102,3 +102,8 @@ app.post('/ipn', express.urlencoded({ extended: false }), async (req, res) => {
 
 // Exporta o app pro Vercel
 module.exports = app;
+
+app.get('/', (req, res) => {
+  res.send('🚀 Backend do checkout PayPal SNK House está online e funcional.');
+});
+
