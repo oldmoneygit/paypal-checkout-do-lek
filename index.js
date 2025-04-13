@@ -1,9 +1,11 @@
-const axios = require('axios'); // se ainda não instalou: npm install axios
+const axios = require('axios');
+const express = require('express');
+const app = express();
 
+// IPN DO PAYPAL + CRIA PEDIDO NA SHOPIFY COM MÚLTIPLOS PRODUTOS
 app.post('/ipn', express.urlencoded({ extended: false }), async (req, res) => {
   const payload = req.body;
 
-  // Monta verificação com o PayPal
   const verifyUrl = 'https://ipnpb.paypal.com/cgi-bin/webscr';
   const verifyPayload = new URLSearchParams({ cmd: '_notify-validate', ...payload });
 
@@ -15,17 +17,16 @@ app.post('/ipn', express.urlencoded({ extended: false }), async (req, res) => {
     if (response.data === 'VERIFIED' && payload.payment_status === 'Completed') {
       console.log('✅ IPN VERIFICADO');
 
-      // Cria pedido na Shopify
-      const shopifyOrder = {
+      const cartItems = JSON.parse(global.tempCart || '[]');
+
+      const line_items = cartItems.map(item => ({
+        variant_id: item.variant_id,
+        quantity: item.quantity
+      }));
+
+      const orderData = {
         order: {
-          line_items: [
-            {
-              title: payload.item_name,
-              price: payload.mc_gross,
-              quantity: 1,
-              name: payload.item_name,
-            },
-          ],
+          line_items,
           financial_status: "paid",
           currency: payload.mc_currency,
           customer: {
@@ -33,13 +34,13 @@ app.post('/ipn', express.urlencoded({ extended: false }), async (req, res) => {
             last_name: payload.last_name || "PayPal",
             email: payload.payer_email || "email@fake.com"
           },
-          note: `Pedido processado via PayPal IPN - Transaction ID: ${payload.txn_id}`
+          note: `Pedido via PayPal IPN - TXN: ${payload.txn_id}`
         }
       };
 
       const shopifyUrl = `https://${process.env.SHOPIFY_DOMAIN}/admin/api/2023-10/orders.json`;
 
-      const shopifyRes = await axios.post(shopifyUrl, shopifyOrder, {
+      const shopifyRes = await axios.post(shopifyUrl, orderData, {
         headers: {
           'X-Shopify-Access-Token': process.env.SHOPIFY_ACCESS_TOKEN,
           'Content-Type': 'application/json',
@@ -53,7 +54,7 @@ app.post('/ipn', express.urlencoded({ extended: false }), async (req, res) => {
 
     res.sendStatus(200);
   } catch (error) {
-    console.error('Erro IPN:', error.response?.data || error.message);
+    console.error('❌ ERRO IPN:', error.response?.data || error.message);
     res.sendStatus(500);
   }
 });
